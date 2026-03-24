@@ -59,6 +59,7 @@ class ViewController: UIViewController {
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
+        // Added comment to practice commits and pushes to Github.
         super.viewDidLoad()
         title = "Simple Picture Load"
         view.backgroundColor = .systemBackground

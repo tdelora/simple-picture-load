@@ -11,6 +11,7 @@
 		AA000001000000000000000B /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000001B /* SceneDelegate.swift */; };
 		AA000001000000000000000C /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000001C /* ViewController.swift */; };
 		AA000001000000000000000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000001D /* Assets.xcassets */; };
+		AA000001000000000000000E /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA000001000000000000001F /* CoreMotion.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +20,7 @@
 		AA000001000000000000001C /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		AA000001000000000000001D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA000001000000000000001E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA000001000000000000001F /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		AA000001000000000000002A /* SimplePictureLoad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePictureLoad.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -27,6 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA000001000000000000000E /* CoreMotion.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -58,7 +61,16 @@
 			children = (
 				AA000001000000000000004A /* SimplePictureLoad */,
 				AA000001000000000000004B /* Products */,
+				AA000001000000000000004D /* Frameworks */,
 			);
+			sourceTree = "<group>";
+		};
+		AA000001000000000000004D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AA000001000000000000001F /* CoreMotion.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

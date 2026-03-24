@@ -1,5 +1,6 @@
 import UIKit
 import PhotosUI
+import CoreMotion
 
 class ViewController: UIViewController {
 
@@ -56,6 +57,11 @@ class ViewController: UIViewController {
         return button
     }()
 
+    // MARK: - Motion
+
+    private let motionManager = CMMotionManager()
+    private var buttonsVisible = true
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -67,6 +73,12 @@ class ViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupLayout()
         setupActions()
+        startMotionUpdates()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        motionManager.stopDeviceMotionUpdates()
     }
 
     // MARK: - Layout
@@ -79,17 +91,17 @@ class ViewController: UIViewController {
         buttonStack.addArrangedSubview(libraryButton)
 
         NSLayoutConstraint.activate([
-            // Image view fills the area between nav bar and button stack
+            // Image view fills the full safe area; button stack overlays at the bottom
             imageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            imageView.bottomAnchor.constraint(equalTo: buttonStack.topAnchor, constant: -16),
+            imageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
 
             // Placeholder label centered in the image view
             placeholderLabel.centerXAnchor.constraint(equalTo: imageView.centerXAnchor),
             placeholderLabel.centerYAnchor.constraint(equalTo: imageView.centerYAnchor),
 
-            // Button stack pinned to the bottom safe area
+            // Button stack overlaid at the bottom of the safe area
             buttonStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             buttonStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
             buttonStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
@@ -124,6 +136,31 @@ class ViewController: UIViewController {
         let picker = PHPickerViewController(configuration: config)
         picker.delegate = self
         present(picker, animated: true)
+    }
+
+    // MARK: - Motion
+
+    private func startMotionUpdates() {
+        guard motionManager.isDeviceMotionAvailable else { return }
+        motionManager.deviceMotionUpdateInterval = 0.2
+        motionManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
+            guard let self = self, let motion = motion else { return }
+            // gravity.z in device frame represents how much the screen faces away from the user:
+            //   > 0.3 : device tilted back / screen facing away (X-axis rotated in -Z direction) → hide buttons
+            //  <= 0.3 : device upright or screen facing toward user (X-axis rotated in +Z direction) → show buttons
+            self.updateButtonVisibility(visible: motion.gravity.z <= 0.3)
+        }
+    }
+
+    private func updateButtonVisibility(visible: Bool) {
+        guard visible != buttonsVisible else { return }
+        buttonsVisible = visible
+        if visible { buttonStack.isHidden = false }
+        UIView.animate(withDuration: 0.3, animations: {
+            self.buttonStack.alpha = visible ? 1.0 : 0.0
+        }, completion: { _ in
+            self.buttonStack.isHidden = !visible
+        })
     }
 
     // MARK: - Helpers

@@ -4,6 +4,7 @@
 
 # Code and liberaries
 * Use Apple Swift
+* Add directory xcuserdata to the .gitignore file.
 
 # Target platforms
 * Apple iPhones and iPads

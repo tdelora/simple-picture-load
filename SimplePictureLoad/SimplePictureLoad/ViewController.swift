@@ -25,12 +25,15 @@ class ViewController: UIViewController {
         return label
     }()
 
+    // buttonStack starts hidden; visibility is controlled by motion gestures and app state
     private let buttonStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.distribution = .fillEqually
         stack.spacing = 16
         stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.isHidden = true
+        stack.alpha = 0.0
         return stack
     }()
 
@@ -60,25 +63,63 @@ class ViewController: UIViewController {
     // MARK: - Motion
 
     private let motionManager = CMMotionManager()
-    private var buttonsVisible = true
+    private var buttonsVisible = false
+
+    // Thresholds for motion gesture detection
+    private static let rotationRateThreshold: Double = 2.5   // rad/s
+    private static let showPitchThreshold: Double    = 45.0  // degrees
+    private static let hidePitchThreshold: Double    = 50.0  // degrees
+
+    // MARK: - Persistence
+
+    private var savedImageURL: URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return docs.appendingPathComponent("savedImage.jpg")
+    }
 
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
-        // Added comment to practice commits and pushes to Github.
-        // Second try at push
-        // Third Try.
         super.viewDidLoad()
         title = "Simple Picture Load"
         view.backgroundColor = .systemBackground
         setupLayout()
         setupActions()
+        restoreState()
         startMotionUpdates()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         motionManager.stopDeviceMotionUpdates()
+    }
+
+    // MARK: - State Restoration
+
+    private func restoreState() {
+        if let image = loadSavedImage() {
+            // Image exists: display it and keep picture source view hidden
+            displayImage(image, save: false)
+        } else {
+            // No image: show the picture source view
+            setButtonsVisible(true, animated: false)
+        }
+    }
+
+    // MARK: - Persistence Helpers
+
+    private func saveImage(_ image: UIImage) {
+        guard let data = image.jpegData(compressionQuality: 0.85) else { return }
+        do {
+            try data.write(to: savedImageURL)
+        } catch {
+            print("SimplePictureLoad: Failed to save image – \(error.localizedDescription)")
+        }
+    }
+
+    private func loadSavedImage() -> UIImage? {
+        guard FileManager.default.fileExists(atPath: savedImageURL.path) else { return nil }
+        return UIImage(contentsOfFile: savedImageURL.path)
     }
 
     // MARK: - Layout
@@ -142,21 +183,32 @@ class ViewController: UIViewController {
 
     private func startMotionUpdates() {
         guard motionManager.isDeviceMotionAvailable else { return }
-        motionManager.deviceMotionUpdateInterval = 0.2
+        motionManager.deviceMotionUpdateInterval = 0.05
         motionManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
             guard let self = self, let motion = motion else { return }
-            // gravity.z in device frame represents how much the screen faces away from the user:
-            //   > 0.3 : device tilted back / screen facing away (X-axis rotated in -Z direction) → hide buttons
-            //  <= 0.3 : device upright or screen facing toward user (X-axis rotated in +Z direction) → show buttons
-            self.updateButtonVisibility(visible: motion.gravity.z <= 0.3)
+
+            // rotationRate.x is rotation around the device X axis (positive = top moving away from user)
+            let rotX = motion.rotationRate.x
+            // attitude.pitch is the angle from horizontal in radians; convert to degrees
+            let pitchDegrees = abs(motion.attitude.pitch * 180.0 / .pi)
+
+            // Show: flick around X axis in -Z direction (rotX spikes negative) with pitch < 45°
+            if rotX < -Self.rotationRateThreshold && pitchDegrees < Self.showPitchThreshold {
+                self.setButtonsVisible(true)
+            }
+            // Hide: flick around X axis in +Z direction (rotX spikes positive) with pitch < 50°
+            else if rotX > Self.rotationRateThreshold && pitchDegrees < Self.hidePitchThreshold {
+                self.setButtonsVisible(false)
+            }
         }
     }
 
-    private func updateButtonVisibility(visible: Bool) {
+    private func setButtonsVisible(_ visible: Bool, animated: Bool = true) {
         guard visible != buttonsVisible else { return }
         buttonsVisible = visible
         if visible { buttonStack.isHidden = false }
-        UIView.animate(withDuration: 0.3, animations: {
+        let duration = animated ? 0.3 : 0.0
+        UIView.animate(withDuration: duration, animations: {
             self.buttonStack.alpha = visible ? 1.0 : 0.0
         }, completion: { _ in
             self.buttonStack.isHidden = !visible
@@ -165,9 +217,11 @@ class ViewController: UIViewController {
 
     // MARK: - Helpers
 
-    private func displayImage(_ image: UIImage) {
+    private func displayImage(_ image: UIImage, save: Bool = true) {
         imageView.image = image
         placeholderLabel.isHidden = true
+        if save { saveImage(image) }
+        setButtonsVisible(false)
     }
 
     private func showAlert(title: String, message: String) {

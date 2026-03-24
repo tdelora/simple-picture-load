@@ -60,6 +60,7 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         // Added comment to practice commits and pushes to Github.
+        // Second try at push
         super.viewDidLoad()
         title = "Simple Picture Load"
         view.backgroundColor = .systemBackground

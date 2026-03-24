@@ -56,6 +56,11 @@ class ViewController: UIViewController {
         return button
     }()
 
+    // MARK: - Constraints
+
+    private var imageViewBottomToButtons: NSLayoutConstraint!
+    private var imageViewBottomToSafeArea: NSLayoutConstraint!
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -67,6 +72,14 @@ class ViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupLayout()
         setupActions()
+        updateButtonVisibility(for: view.bounds.size)
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate { [weak self] _ in
+            self?.updateButtonVisibility(for: size)
+        }
     }
 
     // MARK: - Layout
@@ -78,12 +91,15 @@ class ViewController: UIViewController {
         buttonStack.addArrangedSubview(cameraButton)
         buttonStack.addArrangedSubview(libraryButton)
 
+        imageViewBottomToButtons = imageView.bottomAnchor.constraint(equalTo: buttonStack.topAnchor, constant: -16)
+        imageViewBottomToSafeArea = imageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
+
         NSLayoutConstraint.activate([
             // Image view fills the area between nav bar and button stack
             imageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            imageView.bottomAnchor.constraint(equalTo: buttonStack.topAnchor, constant: -16),
+            imageViewBottomToButtons,
 
             // Placeholder label centered in the image view
             placeholderLabel.centerXAnchor.constraint(equalTo: imageView.centerXAnchor),
@@ -95,6 +111,21 @@ class ViewController: UIViewController {
             buttonStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
             buttonStack.heightAnchor.constraint(equalToConstant: 50)
         ])
+    }
+
+    // MARK: - Orientation
+
+    private func updateButtonVisibility(for size: CGSize) {
+        let isLandscape = size.width > size.height
+        buttonStack.isHidden = isLandscape
+        if isLandscape {
+            imageViewBottomToButtons.isActive = false
+            imageViewBottomToSafeArea.isActive = true
+        } else {
+            imageViewBottomToSafeArea.isActive = false
+            imageViewBottomToButtons.isActive = true
+        }
+        view.layoutIfNeeded()
     }
 
     // MARK: - Actions

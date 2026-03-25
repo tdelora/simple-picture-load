@@ -65,10 +65,17 @@ class ViewController: UIViewController {
     private let motionManager = CMMotionManager()
     private var buttonsVisible = false
 
+    // Locking state: after a show gesture, hiding is locked until Y > 75°.
+    // After a hide gesture, showing is locked until Y > 75° AND Z < -65°.
+    private var hideUnlocked = true
+    private var showUnlocked = true
+
     // Thresholds for motion gesture detection
     private static let rotationRateThreshold: Double = 2.5   // rad/s
-    private static let showPitchThreshold: Double    = 45.0  // degrees
-    private static let hidePitchThreshold: Double    = 50.0  // degrees
+    private static let showPitchThreshold: Double    = 45.0  // degrees – Y must be < this to trigger show
+    private static let hidePitchThreshold: Double    = 50.0  // degrees – Y must be < this to trigger hide
+    private static let unlockPitchThreshold: Double  = 75.0  // degrees – Y must exceed this to unlock
+    private static let unlockRollThreshold: Double   = -65.0 // degrees – Z must be < this to unlock show (after hide gesture)
 
     // MARK: - Persistence
 
@@ -189,15 +196,37 @@ class ViewController: UIViewController {
 
             // rotationRate.x is rotation around the device X axis (positive = top moving away from user)
             let rotX = motion.rotationRate.x
-            // attitude.pitch is the angle from horizontal in radians; convert to degrees
-            let pitchDegrees = abs(motion.attitude.pitch * 180.0 / .pi)
+            // attitude.pitch maps to the "Y value" (tilt forward/backward); signed degrees
+            let pitchDegrees = motion.attitude.pitch * 180.0 / .pi
+            // attitude.roll maps to the "Z value" (tilt sideways); signed degrees
+            let rollDegrees  = motion.attitude.roll  * 180.0 / .pi
 
-            // Show: flick around X axis in -Z direction (rotX spikes negative) with pitch < 45°
-            if rotX < -Self.rotationRateThreshold && pitchDegrees < Self.showPitchThreshold {
+            // Unlock hiding: once Y exceeds 75° (in either direction) after a show gesture
+            if !self.hideUnlocked && abs(pitchDegrees) > Self.unlockPitchThreshold {
+                self.hideUnlocked = true
+            }
+
+            // Unlock showing: once Y exceeds 75° AND Z < -65° after a hide gesture
+            if !self.showUnlocked
+                && abs(pitchDegrees) > Self.unlockPitchThreshold
+                && rollDegrees < Self.unlockRollThreshold {
+                self.showUnlocked = true
+            }
+
+            // Show: flick around X axis in -Z direction (rotX spikes negative) with |pitch| < 45°
+            // Only fires when the show gesture is currently unlocked
+            if rotX < -Self.rotationRateThreshold
+                && abs(pitchDegrees) < Self.showPitchThreshold
+                && self.showUnlocked {
+                self.hideUnlocked = false   // lock hiding until Y > 75°
                 self.setButtonsVisible(true)
             }
-            // Hide: flick around X axis in +Z direction (rotX spikes positive) with pitch < 50°
-            else if rotX > Self.rotationRateThreshold && pitchDegrees < Self.hidePitchThreshold {
+            // Hide: flick around X axis in +Z direction (rotX spikes positive) with |pitch| < 50°
+            // Only fires when the hide gesture is currently unlocked
+            else if rotX > Self.rotationRateThreshold
+                && abs(pitchDegrees) < Self.hidePitchThreshold
+                && self.hideUnlocked {
+                self.showUnlocked = false   // lock showing until Y > 75° AND Z < -65°
                 self.setButtonsVisible(false)
             }
         }

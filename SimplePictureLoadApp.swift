@@ -1,16 +1,21 @@
+// SimplePictureLoadApp.swift
+// SwiftUI app entry point.
+// Creates the shared AppState and starts motion detection on launch.
+
 import SwiftUI
 
 @main
 struct SimplePictureLoadApp: App {
-    @State private var appState = AppState()
+
+    @StateObject private var appState = AppState()
 
     var body: some Scene {
         WindowGroup {
-            ContentView(appState: $appState)
+            ContentView()
+                .environmentObject(appState)
+                .onAppear {
+                    MotionDetector.shared.start(appState: appState)
+                }
         }
     }
-}
-
-class AppState: ObservableObject {
-    // Add your app state properties and methods here
 }

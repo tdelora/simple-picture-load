@@ -1,35 +1,23 @@
-import SwiftUI
-import Combine
+// AppState.swift
 
-class AppState: ObservableObject {
-    @Published var loadedImage: UIImage?
-    @Published var isPictureSourceVisible: Bool = false
+// Imports and other code...
 
-    private let imageKey = "loadedImage"
-    private let visibilityKey = "isPictureSourceVisible"
+class AppState {
+    var isImageLoaded: Bool = false
+    var motionStateTracking: Bool = false
 
+    // Initializes the AppState
     init() {
-        self.loadState()
+        initializePictureSourceVisibility()
     }
 
-    private func loadState() {
-        if let imageData = UserDefaults.standard.data(forKey: imageKey) {
-            self.loadedImage = UIImage(data: imageData)
-        }
-        self.isPictureSourceVisible = UserDefaults.standard.bool(forKey: visibilityKey)
-    }
-
-    func updateImage(_ image: UIImage?) {
-        self.loadedImage = image
-        if let image = image, let data = image.pngData() {
-            UserDefaults.standard.set(data, forKey: imageKey)
+    private func initializePictureSourceVisibility() {
+        if isImageLoaded {
+            // Set visibility of picture source accordingly
         } else {
-            UserDefaults.standard.removeObject(forKey: imageKey)
+            // Handle case when no image is loaded
         }
     }
 
-    func togglePictureSourceVisibility() {
-        isPictureSourceVisible.toggle()
-        UserDefaults.standard.set(isPictureSourceVisible, forKey: visibilityKey)
-    }
+    // Other methods...
 }

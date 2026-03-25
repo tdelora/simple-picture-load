@@ -1,40 +1,33 @@
-import CoreMotion
+// MotionDetector.swift
+
+import UIKit
 
 class MotionDetector {
-    private let motionManager = CMMotionManager()
     
-    func startMotionDetection() {
-        if motionManager.isDeviceMotionAvailable {
-            motionManager.deviceMotionUpdateInterval = 0.1
-            motionManager.startDeviceMotionUpdates(to: OperationQueue.main) { (data, error) in  
-                guard let unwrappedData = data, error == nil else { return }
-                let acceleration = unwrappedData.userAcceleration
-                self.detectMotion(acceleration: acceleration)
-            }
-        }
+    let angleThreshold: CGFloat = 30.0 // Adjust the threshold as needed
+
+    func detectMotion(angle: CGFloat) -> Bool {
+        // Check if the angle is within the specified threshold
+        return abs(angle) < angleThreshold
     }
     
-    private func detectMotion(acceleration: CMAcceleration) {
-        let threshold: Double = 0.5
-        if abs(acceleration.x) > threshold || abs(acceleration.y) > threshold || abs(acceleration.z) > threshold {
-            // Device has been shaken
-            togglePictureSourceView(shouldShow: true)
-        } else {
-            togglePictureSourceView(shouldShow: false)
-        }
-    }
-    
-    private func togglePictureSourceView(shouldShow: Bool) {
-        if shouldShow {
-            print("Show Picture Source View")
+    func updatePictureView(for angle: CGFloat) {
+        if detectMotion(angle: angle) {
             // Logic to show the picture source view
+            showPictureSourceView()
         } else {
-            print("Hide Picture Source View")
             // Logic to hide the picture source view
+            hidePictureSourceView()
         }
     }
     
-    func stopMotionDetection() {
-        motionManager.stopDeviceMotionUpdates()
+    private func showPictureSourceView() {
+        // Implementation to show the view
+        print("Showing picture source view.")
+    }
+    
+    private func hidePictureSourceView() {
+        // Implementation to hide the view
+        print("Hiding picture source view.")
     }
 }

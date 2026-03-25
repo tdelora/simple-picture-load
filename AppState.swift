@@ -1,23 +1,27 @@
-// AppState.swift
+import SwiftUI
 
-// Imports and other code...
+class AppState: ObservableObject {
+    @Published var image: UIImage?
+    @Published var isCameraButtonPressed: Bool = false
+    @Published var isPictureSourceVisible: Bool = true // Initialize picture source visibility
 
-class AppState {
-    var isImageLoaded: Bool = false
-    var motionStateTracking: Bool = false
-
-    // Initializes the AppState
-    init() {
-        initializePictureSourceVisibility()
+    func loadImage(from source: String) {
+        // Logic to load the image from the provided source
     }
 
-    private func initializePictureSourceVisibility() {
-        if isImageLoaded {
-            // Set visibility of picture source accordingly
-        } else {
-            // Handle case when no image is loaded
+    func clearImage() {
+        self.image = nil
+        self.isPictureSourceVisible = true // Ensure picture source is visible again
+    }
+
+    func handleCameraButtonLongPress() {
+        self.isCameraButtonPressed = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7) {
+            if self.isCameraButtonPressed {
+                self.clearImage() 
+                self.isCameraButtonPressed = false
+            }
         }
     }
-
-    // Other methods...
 }

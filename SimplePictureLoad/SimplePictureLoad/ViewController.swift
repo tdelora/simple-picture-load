@@ -162,6 +162,21 @@ class ViewController: UIViewController {
     private func setupActions() {
         cameraButton.addTarget(self, action: #selector(openCamera), for: .touchUpInside)
         libraryButton.addTarget(self, action: #selector(openPhotoLibrary), for: .touchUpInside)
+
+        // Long-press gesture on the camera button: holding for 7 seconds clears the loaded
+        // image without subsequently launching the camera app (cancelsTouchesInView = true
+        // prevents the touchUpInside from firing after the gesture is recognised).
+        let longPress = UILongPressGestureRecognizer(target: self,
+                                                     action: #selector(cameraButtonLongPress(_:)))
+        longPress.minimumPressDuration = 7.0
+        cameraButton.addGestureRecognizer(longPress)
+    }
+
+    @objc private func cameraButtonLongPress(_ gesture: UILongPressGestureRecognizer) {
+        // .began fires exactly once, when the minimum press duration has elapsed.
+        if gesture.state == .began {
+            clearLoadedImage()
+        }
     }
 
     @objc private func openCamera() {
@@ -251,6 +266,14 @@ class ViewController: UIViewController {
         placeholderLabel.isHidden = true
         if save { saveImage(image) }
         setButtonsVisible(false)
+    }
+
+    /// Clears the currently loaded image and shows the picture source view.
+    private func clearLoadedImage() {
+        imageView.image = nil
+        placeholderLabel.isHidden = false
+        try? FileManager.default.removeItem(at: savedImageURL)
+        setButtonsVisible(true)
     }
 
     private func showAlert(title: String, message: String) {

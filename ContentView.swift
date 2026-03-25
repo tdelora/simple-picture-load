@@ -1,37 +1,39 @@
-// Updated ContentView.swift to display loaded image
+// ContentView.swift
+// Root SwiftUI view. Displays the loaded image (or a placeholder) and shows
+// the PictureSourceView overlay when the motion detector says it should be visible.
 
 import SwiftUI
 
 struct ContentView: View {
-    @State private var image: UIImage? = nil
-    @EnvironmentObject var appState: AppState
-    
-    var body: some View {
-        VStack {
-            if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: 300, maxHeight: 300)
-            } else {
-                Text("Loading...")
-            }
-            Text(appState.pictureSource)
-                .font(.caption)
-                .foregroundColor(.gray)
-        }
-        .onAppear(perform: loadImage)
-    }
 
-    private func loadImage() {
-        // Assuming MotionDetector and AppState would provide the necessary functionality to load the image
-        // Simulated image loading logic here: Replace with actual loading code.
-        MotionDetector.detectImageSource { source in
-            self.appState.pictureSource = source
-            guard let url = URL(string: source) else { return }
-            let data = try? Data(contentsOf: url)
-            self.image = data.flatMap { UIImage(data: $0) }
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            // Full-screen image area
+            Group {
+                if let image = appState.loadedImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                } else {
+                    Text("No image selected")
+                        .foregroundColor(.secondary)
+                        .font(.title3)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(uiColor: .secondarySystemBackground))
+
+            // Picture source view – shown/hidden by motion gestures and app state
+            if appState.isPictureSourceVisible {
+                PictureSourceView()
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: appState.isPictureSourceVisible)
+        .ignoresSafeArea(edges: .top)
     }
 }
 

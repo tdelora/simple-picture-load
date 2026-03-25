@@ -17,6 +17,7 @@
   * When a picture is loaded the picture source view will be hide upon loading.
   * At app startup or app restore if no picture is loaded the picture source view will be displayed.
   * At app startup or app restore if a picture is loaded the picture source view will not be displayed.
+  * When the picture source view is displayed and the camera button is touched for more than 7 seconds the currently loaded picture will be cleared. When released the switch to the camera app should not occur allowing the user to load a picture either from the picture roll or take a picture in the camera app.
 
 # Target platforms
 * Apple iPhones and iPads

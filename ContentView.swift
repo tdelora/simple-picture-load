@@ -32,7 +32,6 @@ struct ContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: appState.isPictureSourceVisible)
         .ignoresSafeArea(edges: .top)
     }
 }
